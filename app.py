@@ -7,6 +7,10 @@ import pprint
 url = "https://api.cartolafc.globo.com/atletas/mercado"
 urlStatusMercado = 'https://api.cartolafc.globo.com/mercado/status'
 urlEsquemas = 'https://api.cartolafc.globo.com/esquemas'
+response = urlopen(url)
+mercado = json.loads(response.read())
+responseEsquemas = urlopen(urlEsquemas)
+jsonEsquemas = json.loads(responseEsquemas.read())
 
 
 def calcularDiferenca(i):
@@ -46,8 +50,6 @@ def getPosicoesJson(mercado):
     return posicoes
 
 def acharAtletas():
-    response = urlopen(url)
-    mercado = json.loads(response.read())
     # Acha todo os atletas
     atletas = []
     for i in mercado['atletas']:
@@ -65,6 +67,8 @@ def acharAtletas():
     atletas.sort(key=orderBy, reverse=True)
     return atletas
 
+
+
 def acharNrJogadores(jsonEsquemas):
     posicoes = []
     for key, nrPosicao in jsonEsquemas['posicoes'].items():
@@ -73,8 +77,6 @@ def acharNrJogadores(jsonEsquemas):
 
 
 def getEsquemasPossiveis():
-    responseEsquemas = urlopen(urlEsquemas)
-    jsonEsquemas = json.loads(responseEsquemas.read())
     esquemas = []
     for i in jsonEsquemas:
         esquema = {"Esquema": str, "nrAtacantes": int, "nrMeias": int,
@@ -87,9 +89,8 @@ def getEsquemasPossiveis():
         esquemas.append(esquema)
     return esquemas
 
-
+atletas = acharAtletas()
 def getMelhoresAtletas(posicaoJogador, nrPos):
-    atletas = acharAtletas()
     melhoresAtletas = []
     for i in atletas:
         if(i['Posicao'] == posicaoJogador):
