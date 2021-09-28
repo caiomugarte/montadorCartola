@@ -1,4 +1,3 @@
-from re import I
 from urllib.request import urlopen
 
 import json
@@ -46,7 +45,6 @@ def getPosicoesJson(mercado):
         posicoes['Nome'].append(value['nome'])
     return posicoes
 
-
 def acharAtletas():
     response = urlopen(url)
     mercado = json.loads(response.read())
@@ -54,7 +52,7 @@ def acharAtletas():
     atletas = []
     for i in mercado['atletas']:
         # Acha os Atacantes Prováveis
-        if(i['status_id'] == 7) and calcularDiferenca(i) >= 0 and i['media_num'] > 0:
+        if(i['status_id'] == 7) and calcularDiferenca(i) > 0 and i['media_num'] > 0:
             atleta = {"Nome": str, "Diferença": float,
                       "Fator Compra": float, "Posicao": str, "Preco": float, "Media": float}
             atleta['Nome'] = (i['apelido'])
