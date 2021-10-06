@@ -94,8 +94,8 @@ def getMelhoresAtletas(posicaoJogador, nrPos):
     melhoresAtletas = []
     for i in atletas:
         if(i['Posicao'] == posicaoJogador):
-            melhorAtleta = {'Atleta': [], 'Preco': float, 'PrevisaoPontos': int}
-            melhorAtleta['Atleta'].append(i['Nome'])
+            melhorAtleta = {'Atleta': str, 'Preco': float, 'PrevisaoPontos': int}
+            melhorAtleta['Atleta'] = i['Nome']
             melhorAtleta['Preco'] = i['Preco']
             melhorAtleta['PrevisaoPontos'] = i['Media']
             melhoresAtletas.append(melhorAtleta)
@@ -136,7 +136,7 @@ def getMediaTime(atacantes, meias, zagueiros, laterais, goleiro, tecnico):
 
 
 def acharMelhorTime():
-    times = []
+    times = {"Times": []}
     for esquema in getEsquemasPossiveis():
         time = {"Esquema": str, "Preco": float, "PrevisaoPontos": float, "Atacantes": [], "Meias": [
         ], "Zagueiros": [], "Laterais": [], "Goleiro": [], "Tecnico": [], "PrevisaoPontos": []}
@@ -156,8 +156,9 @@ def acharMelhorTime():
                          time['Zagueiros'], time['Laterais'], time['Goleiro'], time['Tecnico']))
         time['PrevisaoPontos'] = (getMediaTime(time['Atacantes'], time['Meias'],
                          time['Zagueiros'], time['Laterais'], time['Goleiro'], time['Tecnico']))
-        times.append(time)
+        times["Times"].append(time)
     return times
 
-
-pprint.pprint(acharMelhorTime())
+data = acharMelhorTime()
+times = data.get('Times')
+pprint.pprint(acharMelhorTime(), width=10, indent=1, sort_dicts=False)
