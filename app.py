@@ -7,11 +7,12 @@ import pprint
 url = "https://api.cartolafc.globo.com/atletas/mercado"
 urlStatusMercado = 'https://api.cartolafc.globo.com/mercado/status'
 urlEsquemas = 'https://api.cartolafc.globo.com/esquemas'
+urlPartidas = 'https://api.cartolafc.globo.com/partidas'
 response = urlopen(url)
 mercado = json.loads(response.read())
 responseEsquemas = urlopen(urlEsquemas)
 jsonEsquemas = json.loads(responseEsquemas.read())
-
+jsonPartidas = json.loads(urlopen(urlPartidas).read())
 
 def calcularDiferenca(i):
     diferenca = float(i['media_num']) - float(i['pontos_num'])
@@ -23,10 +24,29 @@ def calcularPrecoPonto(i):
     return round(precoPonto, 2)
 
 
-def calcularFatorCompra(i):
-    fatorCompra = calcularDiferenca(i)/calcularPrecoPonto(i)
+def calcularFatorCompra(i, timeID):
+    fatorCompra = (calcularDiferenca(i)/calcularPrecoPonto(i)) + calcularPontosTime(timeID)
+    #Peso em relação à Posição
+    #Historico Soma +1 Vitoria -1 Derrota Empate +0
     return round(fatorCompra, 2)
 
+def calcularPesoAproveitamento(aproveitamento):
+    pontoAproveitamento = 0
+    for i in aproveitamento:
+        if(i == 'v'):
+            pontoAproveitamento += 1
+        elif(i == 'd'):
+            pontoAproveitamento -= 1
+    return pontoAproveitamento/5
+
+def calcularPontosTime(timeID):
+    for partida in jsonPartidas['partidas']:
+        if(timeID == partida['clube_casa_id']):
+            return getPesoTime(partida['clube_casa_posicao']) + calcularPesoAproveitamento(partida['aproveitamento_mandante'])
+        elif(timeID == partida['clube_visitante_id']):
+            return getPesoTime(partida['clube_visitante_posicao']) + calcularPesoAproveitamento(partida['aproveitamento_visitante'])
+def getPesoTime(pos):
+    return (21 - pos)/20
 
 def orderBy(e):
     return e['Fator Compra']
@@ -56,10 +76,11 @@ def acharAtletas():
         # Acha os Atacantes Prováveis
         if(i['status_id'] == 7) and calcularDiferenca(i) > 0 and i['media_num'] > 0:
             atleta = {"Nome": str, "Diferença": float,
-                      "Fator Compra": float, "Posicao": str, "Preco": float, "Media": float}
+                      "Fator Compra": float, "Posicao": str, "Preco": float, "Media": float, 'TimeID': str}
             atleta['Nome'] = (i['apelido'])
             atleta['Diferença'] = (calcularDiferenca(i))
-            atleta['Fator Compra'] = (calcularFatorCompra(i))
+            atleta['TimeID'] = i['clube_id']
+            atleta['Fator Compra'] = calcularFatorCompra(i, atleta['TimeID'])
             atleta['Posicao'] = (acharPosicao(i['posicao_id'], mercado))
             atleta['Preco'] = i['preco_num']
             atleta['Media'] = i['media_num']
@@ -94,13 +115,18 @@ def getMelhoresAtletas(posicaoJogador, nrPos):
     melhoresAtletas = []
     for i in atletas:
         if(i['Posicao'] == posicaoJogador):
-            melhorAtleta = {'Atleta': str, 'Preco': float, 'PrevisaoPontos': int}
+            melhorAtleta = {'Atleta': str, 'Preco': float, 'PrevisaoPontos': int, 'Time': str}
             melhorAtleta['Atleta'] = i['Nome']
             melhorAtleta['Preco'] = i['Preco']
             melhorAtleta['PrevisaoPontos'] = i['Media']
+            melhorAtleta['Time'] = getTimeAtleta(i['TimeID'])
             melhoresAtletas.append(melhorAtleta)
     return melhoresAtletas[:nrPos]
 
+def getTimeAtleta(timeID):
+    for time in jsonPartidas['clubes'].items():
+        if(str(timeID) == time[0]):
+            return time[1]['nome']
 
 def getPrecoTime(atacantes, meias, zagueiros, laterais, goleiro, tecnico):
     preco = 0
