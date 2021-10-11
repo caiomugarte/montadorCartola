@@ -68,6 +68,10 @@ def getPosicoesJson(mercado):
         posicoes['id'].append(value['id'])
         posicoes['Nome'].append(value['nome'])
     return posicoes
+def getTimeAtleta(timeID):
+    for time in jsonPartidas['clubes'].items():
+        if(str(timeID) == time[0]):
+            return time[1]['nome']
 
 def acharAtletas():
     # Acha todo os atletas
@@ -76,9 +80,10 @@ def acharAtletas():
         # Acha os Atacantes Prováveis
         if(i['status_id'] == 7) and calcularDiferenca(i) > 0 and i['media_num'] > 0:
             atleta = {"Nome": str, "Diferença": float,
-                      "Fator Compra": float, "Posicao": str, "Preco": float, "Media": float, 'TimeID': str}
+                      "Fator Compra": float, "Posicao": str, "Preco": float, "Media": float, 'Time': str, 'TimeID': str}
             atleta['Nome'] = (i['apelido'])
             atleta['Diferença'] = (calcularDiferenca(i))
+            atleta['Time'] = getTimeAtleta(i['clube_id'])
             atleta['TimeID'] = i['clube_id']
             atleta['Fator Compra'] = calcularFatorCompra(i, atleta['TimeID'])
             atleta['Posicao'] = (acharPosicao(i['posicao_id'], mercado))
@@ -115,11 +120,12 @@ def getMelhoresAtletas(posicaoJogador, nrPos):
     melhoresAtletas = []
     for i in atletas:
         if(i['Posicao'] == posicaoJogador):
-            melhorAtleta = {'Atleta': str, 'Preco': float, 'PrevisaoPontos': int, 'Time': str}
+            melhorAtleta = {'Atleta': str, 'Preco': float, 'PrevisaoPontos': int, 'Time': str , 'TimeID': str}
             melhorAtleta['Atleta'] = i['Nome']
             melhorAtleta['Preco'] = i['Preco']
             melhorAtleta['PrevisaoPontos'] = i['Media']
             melhorAtleta['Time'] = getTimeAtleta(i['TimeID'])
+            melhorAtleta['TimeID'] = i['TimeID']
             melhoresAtletas.append(melhorAtleta)
     return melhoresAtletas[:nrPos]
 
@@ -165,7 +171,7 @@ def acharMelhorTime():
     times = {"Times": []}
     for esquema in getEsquemasPossiveis():
         time = {"Esquema": str, "Preco": float, "PrevisaoPontos": float, "Atacantes": [], "Meias": [
-        ], "Zagueiros": [], "Laterais": [], "Goleiro": [], "Tecnico": [], "PrevisaoPontos": []}
+        ], "Zagueiros": [], "Laterais": [], "Goleiro": [], "Tecnico": [], "PrevisaoPontos": [], 'Capitao': str}
         time['Esquema'] = esquema['Esquema']
         time['Atacantes'].append(getMelhoresAtletas(
             'Atacante', esquema['nrAtacantes']))
@@ -182,9 +188,38 @@ def acharMelhorTime():
                          time['Zagueiros'], time['Laterais'], time['Goleiro'], time['Tecnico']))
         time['PrevisaoPontos'] = (getMediaTime(time['Atacantes'], time['Meias'],
                          time['Zagueiros'], time['Laterais'], time['Goleiro'], time['Tecnico']))
+        time['Capitao'] = getCapitao(time['Atacantes'], time['Meias'], time['Zagueiros'],time['Laterais'] , time['Goleiro'])
         times["Times"].append(time)
     return times
 
+def getCapitao(atacantes, meias, zagueiros, laterais, goleiros):
+    capitao = ''
+    pontosTemp = 0
+    for i in atacantes[0]:
+        if(i['PrevisaoPontos'] > pontosTemp):
+            pontosTemp = i['PrevisaoPontos'] * calcularPontosTime(i['TimeID'])
+            capitao = i['Atleta']
+    for i in meias[0]:
+        if(i['PrevisaoPontos'] > pontosTemp):
+            pontosTemp = i['PrevisaoPontos']
+            capitao = i['Atleta']
+    for i in zagueiros[0]:
+        if(i['PrevisaoPontos'] > pontosTemp):
+            pontosTemp = i['PrevisaoPontos']
+            capitao = i['Atleta']
+    for i in laterais[0]:
+        if(i['PrevisaoPontos'] > pontosTemp):
+            pontosTemp = i['PrevisaoPontos']
+            capitao = i['Atleta']
+    for i in goleiros[0]:
+        if(i['PrevisaoPontos'] > pontosTemp):
+            pontosTemp = i['PrevisaoPontos']
+            capitao = i['Atleta']
+    return capitao
+
+    
+    
+    return 0
 data = acharMelhorTime()
 times = data.get('Times')
 pprint.pprint(acharMelhorTime(), width=10, indent=1, sort_dicts=False)
