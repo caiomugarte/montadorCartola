@@ -116,7 +116,7 @@ def getEsquemasPossiveis():
     return esquemas
 
 atletas = acharAtletas()
-def getMelhoresAtletas(posicaoJogador, nrPos):
+def getMelhoresAtletas(posicaoJogador):
     melhoresAtletas = []
     for i in atletas:
         if(i['Posicao'] == posicaoJogador):
@@ -127,7 +127,7 @@ def getMelhoresAtletas(posicaoJogador, nrPos):
             melhorAtleta['Time'] = getTimeAtleta(i['TimeID'])
             melhorAtleta['TimeID'] = i['TimeID']
             melhoresAtletas.append(melhorAtleta)
-    return melhoresAtletas[:nrPos]
+    return melhoresAtletas
 
 def getTimeAtleta(timeID):
     for time in jsonPartidas['clubes'].items():
@@ -168,22 +168,23 @@ def getMediaTime(atacantes, meias, zagueiros, laterais, goleiro, tecnico):
 
 
 def acharMelhorTime():
+    melhoresAtacantes = getMelhoresAtletas('Atacante')
+    melhoresZagueiros = getMelhoresAtletas('Zagueiros')
+    melhoresMeias = getMelhoresAtletas('Meias')
+    melhoresLaterais = getMelhoresAtletas('Laterais')
+    melhoresGoleiros = getMelhoresAtletas('Goleiro')
+    melhoresTecnicos = getMelhoresAtletas('Técnico')
     times = {"Times": []}
     for esquema in getEsquemasPossiveis():
         time = {"Esquema": str, "Preco": float, "PrevisaoPontos": float, "Atacantes": [], "Meias": [
         ], "Zagueiros": [], "Laterais": [], "Goleiro": [], "Tecnico": [], "PrevisaoPontos": [], 'Capitao': str}
         time['Esquema'] = esquema['Esquema']
-        time['Atacantes'].append(getMelhoresAtletas(
-            'Atacante', esquema['nrAtacantes']))
-        time['Meias'].append(getMelhoresAtletas('Meia', esquema['nrMeias']))
-        time['Zagueiros'].append(getMelhoresAtletas(
-            'Zagueiro', esquema['nrZagueiros']))
-        time['Laterais'].append(getMelhoresAtletas(
-            'Lateral', esquema['nrLaterais']))
-        time['Goleiro'].append(getMelhoresAtletas(
-            'Goleiro', esquema['nrGoleiro']))
-        time['Tecnico'].append(getMelhoresAtletas(
-            'Técnico', esquema['nrTecnico']))
+        time['Atacantes'].append(melhoresAtacantes[:esquema['nrAtacantes']])
+        time['Meias'].append(melhoresMeias[:esquema['nrMeias']])
+        time['Zagueiros'].append(melhoresZagueiros[:esquema['nrZagueiros']])
+        time['Laterais'].append(melhoresLaterais[:esquema['nrLaterais']])
+        time['Goleiro'].append(melhoresGoleiros[:esquema['nrGoleiro']])
+        time['Tecnico'].append(melhoresTecnicos[:esquema['nrTecnico']])
         time['Preco'] = (getPrecoTime(time['Atacantes'], time['Meias'],
                          time['Zagueiros'], time['Laterais'], time['Goleiro'], time['Tecnico']))
         time['PrevisaoPontos'] = (getMediaTime(time['Atacantes'], time['Meias'],
